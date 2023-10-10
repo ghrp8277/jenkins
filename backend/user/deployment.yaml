@@ -1,0 +1,145 @@
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: prod
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user
+  template:
+    metadata:
+      labels:
+        app: user
+    spec:
+      containers:
+        - name: nestjs-container
+          image: 192.168.0.212:5555/user:20231011-003539
+          # command: ["/bin/sh", "-c"]
+          # args: ["./node_modules/.bin/ts-node -P /usr/src/main/tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d /usr/src/main/dist/data-source.js"]
+          ports:
+            - containerPort: 3001
+          volumeMounts:
+            - name: user-logs
+              mountPath: /usr/src/main/logs
+          env:
+            - name: DATABASE_HOST
+              value: "user-mysql-master-service"
+            - name: DATABASE_PORT
+              value: "3306"
+            - name: DATABASE_USER
+              value: root
+            - name: DATABASE_PASSWORD
+              value: testtest
+
+        - name: mysql-master-container
+          image: 192.168.0.212:5555/mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: testtest
+            - name: MYSQL_DATABASE
+              value: main
+            - name: MYSQL_ALLOW_EMPTY_PASSWORD
+              value: "no"
+            - name: MYSQL_ROOT_HOST
+              value: "%"
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: user-mysql-master-data
+              mountPath: /var/lib/mysql
+
+        - name: phpmyadmin-container
+          image: 192.168.0.212:5555/phpmyadmin/phpmyadmin
+          ports:
+            - containerPort: 80
+          env:
+            - name: PMA_HOST
+              value: "user-mysql-master-service"  # Use service name for DB host
+            - name: PMA_PORT
+              value: "3306"
+            - name: PMA_USER
+              value: root
+            - name: PMA_PASSWORD
+              value: testtest
+      volumes:
+        - name: user-logs
+          hostPath:
+            path: /Users/ijehyeon/server/user/log
+        - name: user-mysql-master-data
+          hostPath:
+            path: /Users/ijehyeon/server/user/backend/mysql/master
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: prod
+spec:
+  selector:
+    app: user
+  ports:
+    - protocol: TCP
+      port: 3001
+      targetPort: 3001
+  type: NodePort
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-mysql-master-service  # Service for the mysql-master-container
+  namespace: prod
+spec:
+  selector:
+    app: user
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-phpmyadmin-service
+  namespace: prod
+spec:
+  selector:
+    app: user
+  ports:
+    - protocol: TCP
+      port: 3080
+      targetPort: 80
+  type: NodePort
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: user-phpmyadmin-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /phpmyadmin-user(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: user-phpmyadmin-service
+            port:
+              number: 3080

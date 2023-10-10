@@ -1,0 +1,218 @@
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: prod
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: email
+  template:
+    metadata:
+      labels:
+        app: email
+    spec:
+      containers:
+        - name: nestjs-container
+          image: 192.168.0.212:5555/email:20231011-001055
+          # command: ["/bin/sh", "-c"]
+          # args: ["./node_modules/.bin/ts-node -P /usr/src/main/tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d /usr/src/main/dist/data-source.js"]
+          ports:
+            - containerPort: 3002
+          volumeMounts:
+            - name: email-logs
+              mountPath: /usr/src/main/logs
+          env:
+            - name: DATABASE_HOST
+              value: "email-mysql-master-service"
+            - name: DATABASE_PORT
+              value: "3306"
+            - name: DATABASE_USER
+              value: root
+            - name: DATABASE_PASSWORD
+              value: testtest
+
+        - name: mysql-master-container
+          image: 192.168.0.212:5555/mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: testtest
+            - name: MYSQL_DATABASE
+              value: main
+            - name: MYSQL_ALLOW_EMPTY_PASSWORD
+              value: "no"
+            - name: MYSQL_ROOT_HOST
+              value: "%"
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: email-mysql-master-data
+              mountPath: /var/lib/mysql
+
+        - name: phpmyadmin-container
+          image: 192.168.0.212:5555/phpmyadmin/phpmyadmin
+          ports:
+            - containerPort: 80
+          env:
+            - name: PMA_HOST
+              value: "email-mysql-master-service" # Use service name for DB host
+            - name: PMA_PORT
+              value: "3306"
+            - name: PMA_USER
+              value: root
+            - name: PMA_PASSWORD
+              value: testtest
+
+        - name: redis-container
+          image: 192.168.0.212:5555/redis:latest
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: email-redis-data
+              mountPath: /data
+
+        - name: redis-gui-container
+          image: 192.168.0.212:5555/rediscommander/redis-commander:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: REDIS_HOSTS
+              value: "email-redis-service"
+            - name: USER
+              value: admin
+            - name: PASSWORD
+              value: testtest
+
+      volumes:
+        - name: email-logs
+          hostPath:
+            path: /Users/ijehyeon/server/email/log
+        - name: email-mysql-master-data
+          hostPath:
+            path: /Users/ijehyeon/server/email/backend/mysql/master
+        - name: email-redis-data
+          hostPath:
+            path: /Users/ijehyeon/server/email/backend/redis/data
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: email-service
+  namespace: prod
+spec:
+  selector:
+    app: email
+  ports:
+    - protocol: TCP
+      port: 3002
+      targetPort: 3002
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: email-mysql-master-service # Service for the mysql-master-container
+  namespace: prod
+spec:
+  selector:
+    app: email
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: email-phpmyadmin-service
+  namespace: prod
+spec:
+  selector:
+    app: email
+  ports:
+    - protocol: TCP
+      port: 3080
+      targetPort: 80
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: email-redis-service
+  namespace: prod
+spec:
+  selector:
+    app: email
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: email-redis-gui-service
+  namespace: prod
+spec:
+  selector:
+    app: email
+  ports:
+    - protocol: TCP
+      port: 3081
+      targetPort: 8081
+  type: NodePort
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: email-phpmyadmin-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /phpmyadmin-email(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: email-phpmyadmin-service
+                port:
+                  number: 3080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: email-redis-gui-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /redis-email(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: email-redis-gui-service
+                port:
+                  number: 3081
