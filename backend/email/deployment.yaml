@@ -92,18 +92,24 @@ spec:
 
       volumes:
         - name: email-logs
-          hostPath:
+          persistentVolumeClaim:
+            claimName: email-logs-pvc
+          # hostPath:
             # path: /Users/ijehyeon/server/email/log
-            path: C:/Users/pil48/server/email/log
+            # type: DirectoryOrCreate
         - name: email-mysql-master-data
-          hostPath:
+          persistentVolumeClaim:
+            claimName: email-mysql-master-data-pvc
+          # hostPath:
             # path: /Users/ijehyeon/server/email/backend/mysql/master
-            path: C:/Users/pil48/server/email/log
+            # type: DirectoryOrCreate
         - name: email-redis-data
-          hostPath:
+          persistentVolumeClaim:
+            claimName: email-redis-data-pvc
+          # hostPath:
             # path: /Users/ijehyeon/server/email/backend/redis/data
-            path: C:/Users/pil48/server/email/log
-
+            # type: DirectoryOrCreate
+      
 ---
 apiVersion: v1
 kind: Service

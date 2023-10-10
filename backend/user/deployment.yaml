@@ -71,11 +71,17 @@ spec:
               value: testtest
       volumes:
         - name: user-logs
-          hostPath:
-            path: /Users/ijehyeon/server/user/log
+          persistentVolumeClaim:
+            claimName: user-logs-pvc
+          # hostPath:
+          #   path: /Users/ijehyeon/server/user/log
+          #   type: DirectoryOrCreate
         - name: user-mysql-master-data
-          hostPath:
-            path: /Users/ijehyeon/server/user/backend/mysql/master
+          persistentVolumeClaim:
+            claimName: user-mysql-master-data-pvc
+          # hostPath:
+          #   path: /Users/ijehyeon/server/user/backend/mysql/master
+          #   type: DirectoryOrCreate
 
 ---
 apiVersion: v1

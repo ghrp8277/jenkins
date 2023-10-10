@@ -29,8 +29,11 @@ spec:
               mountPath: /usr/src/main/logs
       volumes:
         - name: orchestrator-logs
-          hostPath:
-            path: /Users/ijehyeon/server/orchestrator/log
+          persistentVolumeClaim:
+            claimName: orchestrator-logs-pvc
+          # hostPath:
+          #   path: /Users/ijehyeon/server/orchestrator/log
+          #   type: DirectoryOrCreate
 
 ---
 apiVersion: v1
