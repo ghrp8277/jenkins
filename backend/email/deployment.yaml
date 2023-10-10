@@ -94,15 +94,15 @@ spec:
         - name: email-logs
           hostPath:
             # path: /Users/ijehyeon/server/email/log
-            path: /c/Users/pil48/server/email/log
+            path: C:/Users/pil48/server/email/log
         - name: email-mysql-master-data
           hostPath:
             # path: /Users/ijehyeon/server/email/backend/mysql/master
-            path: /c/Users/pil48/server/email/log
+            path: C:/Users/pil48/server/email/log
         - name: email-redis-data
           hostPath:
             # path: /Users/ijehyeon/server/email/backend/redis/data
-            path: /c/Users/pil48/server/email/log
+            path: C:/Users/pil48/server/email/log
 
 ---
 apiVersion: v1
