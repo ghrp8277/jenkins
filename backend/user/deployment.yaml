@@ -23,7 +23,7 @@ spec:
         - name: nestjs-container
           image: 192.168.0.212:5555/user:20231012-050246
           command: ["/bin/bash"]
-          args: ["entrypoint.sh"]
+          args: ["/usr/src/main/entrypoint.sh"]
           # command: ["/bin/sh", "-c"]
           # args: ["./node_modules/.bin/ts-node -P /usr/src/main/tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d /usr/src/main/dist/data-source.js"]
           ports:
