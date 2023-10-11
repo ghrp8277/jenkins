@@ -1,0 +1,176 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: prod
+data:
+  nginx.conf: |
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name localhost;
+
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+            try_files $uri $uri/ /index.html;
+        }
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx-container
+          image: 192.168.0.212:5555/front:20230926-055111
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: nginx.conf
+            - name: nginx-log
+              mountPath: /var/log/nginx
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+        - name: nginx-log
+          persistentVolumeClaim:
+            claimName: front-nginx-log-pvc
+          # hostPath:
+          #   path: /Users/ijehyeon/server/nginx/log
+          #   type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: prod
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      # nodePort: 30080
+  type: NodePort
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service
+                port:
+                  number: 80
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: prod
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Daemon Off
+        Log_Level info
+        Parsers_File parsers.conf
+
+    [INPUT]
+        Name tail
+        Path /logs/error.log
+        Read_from_Head true
+
+    [OUTPUT]
+        name slack
+        match *
+        webhook https://hooks.slack.com/services/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
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fluent-bit-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fluent-bit
+  template:
+    metadata:
+      labels:
+        app: fluent-bit
+    spec:
+      containers:
+        - name: fluent-bit
+          image: 192.168.0.212:5555/fluent/fluent-bit
+          volumeMounts:
+            - name: fluent-config
+              mountPath: /fluent-bit/etc/fluent-bit.conf
+              subPath: fluent-bit.conf
+            - name: fluent-log
+              mountPath: /logs
+      volumes:
+        - name: fluent-config
+          configMap:
+            name: fluent-bit-config
+        - name: fluent-log
+          persistentVolumeClaim:
+            claimName: front-fluent-log-pvc
+          # hostPath:
+          #   path: /Users/ijehyeon/server/nginx/log
+          #   type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fluent-bit-service
+  namespace: prod
+spec:
+  selector:
+    app: fluent-bit
+  ports:
+    - name: fluent-bit-tcp
+      protocol: TCP
+      port: 24220
+      targetPort: 24224
+    - name: fluent-bit-udp
+      protocol: UDP
+      port: 24220
+      targetPort: 24224
