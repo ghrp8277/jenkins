@@ -1,5 +1,3 @@
 # jenkins
 
 deployment store
-
-test
