@@ -41,7 +41,7 @@ spec:
     spec:
       containers:
         - name: nginx-container
-          image: 192.168.0.212:5555/front:20230926-055111
+          image: 192.168.0.212:5555/front:20231017-070939
           ports:
             - containerPort: 80
           volumeMounts:
