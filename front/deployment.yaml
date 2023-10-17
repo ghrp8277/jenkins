@@ -43,7 +43,7 @@ spec:
         runAsUser: 0
       containers:
         - name: nginx-container
-          image: 192.168.0.212:5555/front:20231017-094804
+          image: 192.168.0.212:5555/front:20231018-042815
           ports:
             - containerPort: 80
           volumeMounts:
