@@ -7,33 +7,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: user-deployment
+  name: auth-deployment
   namespace: prod
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: user
+      app: auth
   template:
     metadata:
       labels:
-        app: user
+        app: auth
     spec:
       containers:
         - name: nestjs-container
-          image: 192.168.0.212:5555/user:20231110-125912
-          # command: ["/bin/bash"]
-          # args: ["/usr/src/main/entrypoint.sh"]
+          image: 192.168.0.212:5555/auth:20231030-052730
+          command: ["/bin/bash"]
+          args: ["/usr/src/main/entrypoint.sh"]
           # command: ["/bin/sh", "-c"]
           # args: ["./node_modules/.bin/ts-node -P /usr/src/main/tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d /usr/src/main/dist/data-source.js"]
           ports:
-            - containerPort: 3001
+            - containerPort: 3003
           volumeMounts:
-            - name: user-logs
+            - name: auth-logs
               mountPath: /usr/src/main/logs
           env:
             - name: DATABASE_HOST
-              value: "user-mysql-master-service"
+              value: "auth-mysql-master-service"
             - name: DATABASE_PORT
               value: "3306"
             - name: DATABASE_USER
@@ -55,7 +55,7 @@ spec:
           ports:
             - containerPort: 3306
           volumeMounts:
-            - name: user-mysql-master-data
+            - name: auth-mysql-master-data
               mountPath: /var/lib/mysql
 
         - name: phpmyadmin-container
@@ -64,7 +64,7 @@ spec:
             - containerPort: 80
           env:
             - name: PMA_HOST
-              value: "user-mysql-master-service" # Use service name for DB host
+              value: "auth-mysql-master-service" # Use service name for DB host
             - name: PMA_PORT
               value: "3306"
             - name: PMA_USER
@@ -77,7 +77,7 @@ spec:
           ports:
             - containerPort: 6379
           volumeMounts:
-            - name: user-redis-data
+            - name: auth-redis-data
               mountPath: /data
 
         - name: redis-gui-container
@@ -86,56 +86,55 @@ spec:
             - containerPort: 8081
           env:
             - name: REDIS_HOSTS
-              value: "user-redis-service"
+              value: "auth-redis-service"
             - name: USER
               value: admin
             - name: PASSWORD
               value: testtest
 
       volumes:
-        - name: user-logs
+        - name: auth-logs
           persistentVolumeClaim:
-            claimName: user-logs-pvc
+            claimName: auth-logs-pvc
           # hostPath:
-          #   path: /Users/ijehyeon/server/user/log
+          #   path: /Users/ijehyeon/server/auth/log
           #   type: DirectoryOrCreate
-        - name: user-mysql-master-data
+        - name: auth-mysql-master-data
           persistentVolumeClaim:
-            claimName: user-mysql-master-data-pvc
+            claimName: auth-mysql-master-data-pvc
           # hostPath:
-          #   path: /Users/ijehyeon/server/user/backend/mysql/master
+          #   path: /Users/ijehyeon/server/auth/backend/mysql/master
           #   type: DirectoryOrCreate
-        - name: user-redis-data
+        - name: auth-redis-data
           persistentVolumeClaim:
-            claimName: user-redis-data-pvc
+            claimName: auth-redis-data-pvc
           # hostPath:
-          # path: /Users/ijehyeon/server/user/backend/redis/data
+          # path: /Users/ijehyeon/server/auth/backend/redis/data
           # type: DirectoryOrCreate
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-service
+  name: auth-service
   namespace: prod
 spec:
   selector:
-    app: user
+    app: auth
   ports:
     - protocol: TCP
-      port: 3001
-      targetPort: 3001
+      port: 3003
+      targetPort: 3003
   type: NodePort
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-mysql-master-service # Service for the mysql-master-container
+  name: auth-mysql-master-service # Service for the mysql-master-container
   namespace: prod
 spec:
   selector:
-    app: user
+    app: auth
   ports:
     - protocol: TCP
       port: 3306
@@ -145,11 +144,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-phpmyadmin-service
+  name: auth-phpmyadmin-service
   namespace: prod
 spec:
   selector:
-    app: user
+    app: auth
   ports:
     - protocol: TCP
       port: 3080
@@ -160,11 +159,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-redis-service
+  name: auth-redis-service
   namespace: prod
 spec:
   selector:
-    app: user
+    app: auth
   ports:
     - protocol: TCP
       port: 6379
@@ -175,11 +174,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-redis-gui-service
+  name: auth-redis-gui-service
   namespace: prod
 spec:
   selector:
-    app: user
+    app: auth
   ports:
     - protocol: TCP
       port: 3081
@@ -190,7 +189,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: user-phpmyadmin-ingress
+  name: auth-phpmyadmin-ingress
   namespace: prod
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -199,11 +198,11 @@ spec:
   rules:
     - http:
         paths:
-          - path: /phpmyadmin-user(/|$)(.*)
+          - path: /phpmyadmin-auth(/|$)(.*)
             pathType: Prefix
             backend:
               service:
-                name: user-phpmyadmin-service
+                name: auth-phpmyadmin-service
                 port:
                   number: 3080
 
@@ -211,7 +210,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: user-redis-gui-ingress
+  name: auth-redis-gui-ingress
   namespace: prod
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -220,10 +219,10 @@ spec:
   rules:
     - http:
         paths:
-          - path: /redis-user(/|$)(.*)
+          - path: /redis-auth(/|$)(.*)
             pathType: Prefix
             backend:
               service:
-                name: user-redis-gui-service
+                name: auth-redis-gui-service
                 port:
                   number: 3081

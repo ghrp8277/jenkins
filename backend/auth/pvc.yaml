@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: user-logs-pvc
+  name: auth-logs-pvc
   namespace: prod
 spec:
   accessModes:
@@ -15,7 +15,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: user-mysql-master-data-pvc
+  name: auth-mysql-master-data-pvc
   namespace: prod
 spec:
   accessModes:
@@ -28,7 +28,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: user-redis-data-pvc
+  name: auth-redis-data-pvc
   namespace: prod
 spec:
   accessModes:
