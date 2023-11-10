@@ -74,14 +74,6 @@ spec:
 
         - name: redis-container
           image: 192.168.0.212:5555/redis:latest
-          command: ["redis-server", "--slaveof", "user-redis-service", "6379"]
-          env:
-            - name: REDIS_REPLICATION_MODE
-              value: "slave"
-            - name: REDIS_MASTER_SERVICE
-              value: "user-redis-service"
-            - name: REDIS_MASTER_PORT_NUMBER
-              value: "6379"
           ports:
             - containerPort: 6379
           volumeMounts:
@@ -100,26 +92,59 @@ spec:
             - name: PASSWORD
               value: testtest
 
+        - name: redis-slave-container
+          image: 192.168.0.212:5555/redis:latest
+          command: ["redis-server", "--slaveof", "user-redis-service", "6379"]
+          env:
+            - name: REDIS_REPLICATION_MODE
+              value: "slave"
+            - name: REDIS_MASTER_SERVICE
+              value: "user-redis-service"
+            - name: REDIS_MASTER_PORT_NUMBER
+              value: "6379"
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: email-slave-redis-data
+              mountPath: /data
+
+        - name: redis-slave-gui-container
+          image: 192.168.0.212:5555/rediscommander/redis-commander:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: REDIS_HOSTS
+              value: "email-redis-service"
+            - name: USER
+              value: admin
+            - name: PASSWORD
+              value: testtest
+
       volumes:
         - name: email-logs
           persistentVolumeClaim:
             claimName: email-logs-pvc
           # hostPath:
-            # path: /Users/ijehyeon/server/email/log
-            # type: DirectoryOrCreate
+          # path: /Users/ijehyeon/server/email/log
+          # type: DirectoryOrCreate
         - name: email-mysql-master-data
           persistentVolumeClaim:
             claimName: email-mysql-master-data-pvc
           # hostPath:
-            # path: /Users/ijehyeon/server/email/backend/mysql/master
-            # type: DirectoryOrCreate
+          # path: /Users/ijehyeon/server/email/backend/mysql/master
+          # type: DirectoryOrCreate
         - name: email-redis-data
           persistentVolumeClaim:
             claimName: email-redis-data-pvc
           # hostPath:
-            # path: /Users/ijehyeon/server/email/backend/redis/data
-            # type: DirectoryOrCreate
-      
+          # path: /Users/ijehyeon/server/email/backend/redis/data
+          # type: DirectoryOrCreate
+        - name: email-slave-redis-data
+          persistentVolumeClaim:
+            claimName: email-slave-redis-data-pvc
+          # hostPath:
+          # path: /Users/ijehyeon/server/email/backend/redis/slave/data
+          # type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: Service
@@ -195,6 +220,36 @@ spec:
   type: NodePort
 
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: email-slave-redis-service
+  namespace: prod
+spec:
+  selector:
+    app: email
+  ports:
+    - protocol: TCP
+      port: 6380
+      targetPort: 6379
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: email-slave-redis-gui-service
+  namespace: prod
+spec:
+  selector:
+    app: email
+  ports:
+    - protocol: TCP
+      port: 3082
+      targetPort: 8081
+  type: NodePort
+
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -235,3 +290,24 @@ spec:
                 name: email-redis-gui-service
                 port:
                   number: 3081
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: email-slave-redis-gui-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /redis-slave-email(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: email-slave-redis-gui-service
+                port:
+                  number: 3082
