@@ -118,12 +118,14 @@ spec:
 
         - name: redis-slave-gui-container
           image: 192.168.0.212:5555/rediscommander/redis-commander:latest
-          command: ["redis-commander", "--redis-port", "8082"]
+          # command: ["redis-commander", "--redis-port", "8082"]
           ports:
             - containerPort: 8082
           env:
             - name: REDIS_HOSTS
               value: "email-slave-redis-service"
+            - name: PORT
+              value: "8082"
             - name: USER
               value: admin
             - name: PASSWORD
