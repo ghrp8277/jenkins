@@ -22,8 +22,8 @@ spec:
       containers:
         - name: nestjs-container
           image: 192.168.0.212:5555/email:20231108-222213
-          # command: ["/bin/bash"]
-          # args: ["/usr/src/main/entrypoint.sh"]
+          command: ["/bin/bash"]
+          args: ["/usr/src/main/entrypoint.sh"]
           # command: ["/bin/sh", "-c"]
           # args: ["./node_modules/.bin/ts-node -P /usr/src/main/tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d /usr/src/main/dist/data-source.js"]
           ports:
@@ -74,6 +74,14 @@ spec:
 
         - name: redis-container
           image: 192.168.0.212:5555/redis:latest
+          command: ["redis-server", "--slaveof", "user-redis-service", "6379"]
+          env:
+            - name: REDIS_REPLICATION_MODE
+              value: "slave"
+            - name: REDIS_MASTER_SERVICE
+              value: "user-redis-service"
+            - name: REDIS_MASTER_PORT_NUMBER
+              value: "6379"
           ports:
             - containerPort: 6379
           volumeMounts:
