@@ -123,7 +123,7 @@ spec:
             - containerPort: 8082
           env:
             - name: REDIS_HOSTS
-              value: "email-redis-service"
+              value: "email-slave-redis-service"
             - name: USER
               value: admin
             - name: PASSWORD
