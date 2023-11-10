@@ -118,6 +118,7 @@ spec:
 
         - name: redis-slave-gui-container
           image: 192.168.0.212:5555/rediscommander/redis-commander:latest
+          command: ["redis-commander", "--redis-port", "8082"]
           ports:
             - containerPort: 8082
           env:
