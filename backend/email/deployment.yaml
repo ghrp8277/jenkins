@@ -156,7 +156,6 @@ spec:
           # hostPath:
           # path: /Users/ijehyeon/server/email/backend/redis/slave/data
           # type: DirectoryOrCreate
-
 ---
 apiVersion: v1
 kind: Service
