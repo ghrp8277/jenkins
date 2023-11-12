@@ -92,44 +92,44 @@ spec:
             - name: PASSWORD
               value: testtest
 
-        - name: redis-slave-container
-          image: 192.168.0.212:5555/redis:latest
-          command:
-            [
-              "redis-server",
-              "--port",
-              "6380",
-              "--slaveof",
-              "user-redis-service",
-              "6379",
-            ]
-          env:
-            - name: REDIS_REPLICATION_MODE
-              value: "slave"
-            - name: REDIS_MASTER_SERVICE
-              value: "user-redis-service"
-            - name: REDIS_MASTER_PORT_NUMBER
-              value: "6379"
-          ports:
-            - containerPort: 6380
-          volumeMounts:
-            - name: email-slave-redis-data
-              mountPath: /data
+        # - name: redis-slave-container
+        #   image: 192.168.0.212:5555/redis:latest
+        #   command:
+        #     [
+        #       "redis-server",
+        #       "--port",
+        #       "6380",
+        #       "--slaveof",
+        #       "user-redis-service",
+        #       "6379",
+        #     ]
+        #   env:
+        #     - name: REDIS_REPLICATION_MODE
+        #       value: "slave"
+        #     - name: REDIS_MASTER_SERVICE
+        #       value: "user-redis-service"
+        #     - name: REDIS_MASTER_PORT_NUMBER
+        #       value: "6379"
+        #   ports:
+        #     - containerPort: 6380
+        #   volumeMounts:
+        #     - name: email-slave-redis-data
+        #       mountPath: /data
 
-        - name: redis-slave-gui-container
-          image: 192.168.0.212:5555/rediscommander/redis-commander:latest
-          # command: ["redis-commander", "--redis-port", "8082"]
-          ports:
-            - containerPort: 8082
-          env:
-            - name: REDIS_HOSTS
-              value: "email-slave-redis-service"
-            - name: PORT
-              value: "8082"
-            - name: USER
-              value: admin
-            - name: PASSWORD
-              value: testtest
+        # - name: redis-slave-gui-container
+        #   image: 192.168.0.212:5555/rediscommander/redis-commander:latest
+        #   # command: ["redis-commander", "--redis-port", "8082"]
+        #   ports:
+        #     - containerPort: 8082
+        #   env:
+        #     - name: REDIS_HOSTS
+        #       value: "email-slave-redis-service"
+        #     - name: PORT
+        #       value: "8082"
+        #     - name: USER
+        #       value: admin
+        #     - name: PASSWORD
+        #       value: testtest
 
       volumes:
         - name: email-logs
