@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: nestjs-container
-          image: 192.168.0.212:5555/orchestrator:20231113-041855
+          image: 192.168.0.212:5555/orchestrator:20231113-224519
           ports:
             - containerPort: 3000
           volumeMounts:
