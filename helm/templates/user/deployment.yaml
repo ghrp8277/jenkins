@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: nestjs-container
-          image: 192.168.0.212:5555/user:20231119-185328
+          image: 192.168.0.212:5555/user:20231121-015024
           command: ["/bin/bash"]
           args: ["/usr/src/main/entrypoint.sh"]
           ports:
