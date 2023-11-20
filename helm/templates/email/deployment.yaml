@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: email
+  template:
+    metadata:
+      labels:
+        app: email
+    spec:
+      containers:
+        - name: nestjs-container
+          image: 192.168.0.212:5555/email:20231116-063108
+          command: ["/bin/bash"]
+          args: ["/usr/src/main/entrypoint.sh"]
+          ports:
+            - containerPort: 3002
+          volumeMounts:
+            - name: email-logs
+              mountPath: {{ .Values.log.mountPath }}
+          env:
+            - name: DATABASE_HOST
+              value: "email-mysql-master-service"
+            - name: DATABASE_PORT
+              value: "{{ .Values.database.env.port }}"
+            - name: DATABASE_USER
+              value: {{ .Values.database.env.user }}
+            - name: DATABASE_PASSWORD
+              value: {{ .Values.database.env.password }}
+
+        - name: mysql-master-container
+          image: 192.168.0.212:5555/mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: {{ .Values.database.env.password }}
+            - name: MYSQL_DATABASE
+              value: {{ .Values.database.env.db }}
+            - name: MYSQL_ALLOW_EMPTY_PASSWORD
+              value: "no"
+            - name: MYSQL_ROOT_HOST
+              value: "%"
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: email-mysql-master-data
+              mountPath: {{ .Values.database.volume.mountPath }}
+
+        - name: phpmyadmin-container
+          image: 192.168.0.212:5555/phpmyadmin/phpmyadmin
+          ports:
+            - containerPort: 80
+          env:
+            - name: PMA_HOST
+              value: "email-mysql-master-service" 
+            - name: PMA_PORT
+              value: "{{ .Values.database.env.port }}"
+            - name: PMA_USER
+              value: {{ .Values.database.env.user }}
+            - name: PMA_PASSWORD
+              value: {{ .Values.database.env.password }}
+
+        - name: redis-container
+          image: 192.168.0.212:5555/redis:latest
+          ports:
+            - containerPort: {{ .Values.redis.master.env.port }}
+          volumeMounts:
+            - name: email-redis-data
+              mountPath: {{ .Values.redis.master.volume.mountPath }}
+
+        - name: redis-gui-container
+          image: 192.168.0.212:5555/rediscommander/redis-commander:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: REDIS_HOSTS
+              value: "email-redis-service"
+            - name: USER
+              value: {{ .Values.redis.master.env.user }}
+            - name: PASSWORD
+              value: {{ .Values.redis.master.env.password }}
+
+        - name: redis-slave-container
+          image: 192.168.0.212:5555/redis:latest
+          command:
+            [
+              "redis-server",
+              "--port",
+              "6380",
+              "--slaveof",
+              "orchestrator-redis-service",
+              "6379",
+            ]
+          env:
+            - name: REDIS_REPLICATION_MODE
+              value: "slave"
+            - name: REDIS_MASTER_SERVICE
+              value: "orchestrator-redis-service"
+            - name: REDIS_MASTER_PORT_NUMBER
+              value: "6379"
+          ports:
+            - containerPort: {{ .Values.redis.slave.env.port }}
+          volumeMounts:
+            - name: email-slave-redis-data
+              mountPath: {{ .Values.redis.slave.volume.mountPath }}
+
+        - name: redis-slave-gui-container
+          image: 192.168.0.212:5555/rediscommander/redis-commander:latest
+          ports:
+            - containerPort: 8082
+          env:
+            - name: REDIS_HOSTS
+              value: "local:localhost:6380"
+            - name: PORT
+              value: "8082"
+            - name: USER
+              value: {{ .Values.redis.slave.env.user }}
+            - name: PASSWORD
+              value: {{ .Values.redis.slave.env.password }}
+
+      volumes:
+        - name: email-logs
+          persistentVolumeClaim:
+            claimName: email-logs-pvc
+        - name: email-mysql-master-data
+          persistentVolumeClaim:
+            claimName: email-mysql-master-data-pvc
+        - name: email-redis-data
+          persistentVolumeClaim:
+            claimName: email-redis-data-pvc
+        - name: email-slave-redis-data
+          persistentVolumeClaim:
+            claimName: email-slave-redis-data-pvc

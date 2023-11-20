@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orchestrator
+  template:
+    metadata:
+      labels:
+        app: orchestrator
+    spec:
+      containers:
+        - name: nestjs-container
+          image: 192.168.0.212:5555/orchestrator:20231115-021746
+          command: ["/bin/bash"]
+          args: ["/usr/src/main/entrypoint.sh"]
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: orchestrator-logs
+              mountPath: {{ .Values.log.mountPath }}
+
+        - name: redis-container
+          image: 192.168.0.212:5555/redis:latest
+          ports:
+            - containerPort: {{ .Values.redis.master.env.port }}
+          volumeMounts:
+            - name: orchestrator-redis-data
+              mountPath: {{ .Values.redis.master.volume.mountPath }}
+
+        - name: redis-gui-container
+          image: 192.168.0.212:5555/rediscommander/redis-commander:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: REDIS_HOSTS
+              value: "orchestrator-redis-service"
+            - name: USER
+              value: {{ .Values.redis.master.env.user }}
+            - name: PASSWORD
+              value: {{ .Values.redis.master.env.password }}
+
+        - name: fluent-bit
+          image: 192.168.0.212:5555/fluent/fluent-bit
+          volumeMounts:
+            - name: orchestrator-fluent-config
+              mountPath: {{ .Values.fluentBit.volume.mountPath }}
+              subPath: {{ .Values.fluentBit.volume.subPath }}
+            - name: orchestrator-logs
+              mountPath: {{ .Values.log.mountPath }}
+
+      volumes:
+        - name: orchestrator-logs
+          persistentVolumeClaim:
+            claimName: orchestrator-logs-pvc
+        - name: orchestrator-redis-data
+          persistentVolumeClaim:
+            claimName: orchestrator-redis-data-pvc
+        - name: orchestrator-fluent-config
+          configMap:
+            name: orchestrator-fluent-bit-config

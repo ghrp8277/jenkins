@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user
+  template:
+    metadata:
+      labels:
+        app: user
+    spec:
+      containers:
+        - name: nestjs-container
+          image: 192.168.0.212:5555/user:20231116-044146
+          command: ["/bin/bash"]
+          args: ["/usr/src/main/entrypoint.sh"]
+          ports:
+            - containerPort: 3001
+          volumeMounts:
+            - name: user-logs
+              mountPath: /usr/src/main/logs
+          env:
+            - name: DATABASE_HOST
+              value: "user-mysql-master-service"
+            - name: DATABASE_PORT
+              value: "3306"
+            - name: DATABASE_USER
+              value: root
+            - name: DATABASE_PASSWORD
+              value: testtest
+
+        - name: mysql-master-container
+          image: 192.168.0.212:5555/mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: testtest
+            - name: MYSQL_DATABASE
+              value: main
+            - name: MYSQL_ALLOW_EMPTY_PASSWORD
+              value: "no"
+            - name: MYSQL_ROOT_HOST
+              value: "%"
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: user-mysql-master-data
+              mountPath: /var/lib/mysql
+
+        - name: phpmyadmin-container
+          image: 192.168.0.212:5555/phpmyadmin/phpmyadmin
+          ports:
+            - containerPort: 80
+          env:
+            - name: PMA_HOST
+              value: "user-mysql-master-service" 
+            - name: PMA_PORT
+              value: "3306"
+            - name: PMA_USER
+              value: root
+            - name: PMA_PASSWORD
+              value: testtest
+
+        - name: redis-container
+          image: 192.168.0.212:5555/redis:latest
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: user-redis-data
+              mountPath: /data
+
+        - name: redis-gui-container
+          image: 192.168.0.212:5555/rediscommander/redis-commander:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: REDIS_HOSTS
+              value: "user-redis-service"
+            - name: USER
+              value: admin
+            - name: PASSWORD
+              value: testtest
+
+        - name: redis-slave-container
+          image: 192.168.0.212:5555/redis:latest
+          command:
+            [
+              "redis-server",
+              "--port",
+              "6380",
+              "--slaveof",
+              "orchestrator-redis-service",
+              "6379",
+            ]
+          env:
+            - name: REDIS_REPLICATION_MODE
+              value: "slave"
+            - name: REDIS_MASTER_SERVICE
+              value: "orchestrator-redis-service"
+            - name: REDIS_MASTER_PORT_NUMBER
+              value: "6379"
+          ports:
+            - containerPort: 6380
+          volumeMounts:
+            - name: user-slave-redis-data
+              mountPath: /data
+
+        - name: redis-slave-gui-container
+          image: 192.168.0.212:5555/rediscommander/redis-commander:latest
+          ports:
+            - containerPort: 8082
+          env:
+            - name: REDIS_HOSTS
+              value: "local:localhost:6380"
+            - name: PORT
+              value: "8082"
+            - name: USER
+              value: admin
+            - name: PASSWORD
+              value: testtest
+
+        - name: fluent-bit
+          image: 192.168.0.212:5555/fluent/fluent-bit
+          volumeMounts:
+            - name: user-fluent-config
+              mountPath: /fluent-bit/etc/fluent-bit.conf
+              subPath: fluent-bit.conf
+            - name: user-logs
+              mountPath: /usr/src/main/logs
+
+      volumes:
+        - name: user-logs
+          persistentVolumeClaim:
+            claimName: user-logs-pvc
+        - name: user-mysql-master-data
+          persistentVolumeClaim:
+            claimName: user-mysql-master-data-pvc
+        - name: user-redis-data
+          persistentVolumeClaim:
+            claimName: user-redis-data-pvc
+        - name: user-slave-redis-data
+          persistentVolumeClaim:
+            claimName: user-slave-redis-data-pvc
+        - name: user-fluent-config
+          configMap:
+            name: user-fluent-bit-config
