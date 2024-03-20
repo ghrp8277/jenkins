@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wallet-fluent-bit-config
+  namespace: prod
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Daemon Off
+        Log_Level debug
+        Parsers_File parsers.conf
+
+    [INPUT]
+        Name tail
+        Path /usr/src/main/logs/error-*.log
+        Read_from_Head false
+
+    [OUTPUT]
+        name slack
+        match *
+        webhook https://hooks.slack.com/services/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

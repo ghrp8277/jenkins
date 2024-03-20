@@ -1,0 +1,65 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wallet-phpmyadmin-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /phpmyadmin-wallet(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: wallet-phpmyadmin-service
+                port:
+                  number: 3080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wallet-redis-gui-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /redis-wallet(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: wallet-redis-gui-service
+                port:
+                  number: 3081
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wallet-slave-redis-gui-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /redis-slave-wallet(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: wallet-slave-redis-gui-service
+                port:
+                  number: 3082
