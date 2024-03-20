@@ -1,0 +1,123 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+  namespace: prod
+spec:
+  selector:
+    app: product
+  ports:
+    - protocol: TCP
+      port: 3005
+      targetPort: 3005
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-mysql-master-service 
+  namespace: prod
+spec:
+  selector:
+    app: product
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-phpmyadmin-service
+  namespace: prod
+spec:
+  selector:
+    app: product
+  ports:
+    - protocol: TCP
+      port: 3080
+      targetPort: 80
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-redis-service
+  namespace: prod
+spec:
+  selector:
+    app: product
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-redis-gui-service
+  namespace: prod
+spec:
+  selector:
+    app: product
+  ports:
+    - protocol: TCP
+      port: 3081
+      targetPort: 8081
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-slave-redis-service
+  namespace: prod
+spec:
+  selector:
+    app: product
+  ports:
+    - protocol: TCP
+      port: 6380
+      targetPort: 6380
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-slave-redis-gui-service
+  namespace: prod
+spec:
+  selector:
+    app: product
+  ports:
+    - protocol: TCP
+      port: 3082
+      targetPort: 8082
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-fluent-bit-service
+  namespace: prod
+spec:
+  selector:
+    app: product
+  ports:
+    - name: tcp
+      protocol: TCP
+      port: 24220
+      targetPort: 24224
+    - name: udp
+      protocol: UDP
+      port: 24220
+      targetPort: 24224
+  type: NodePort
