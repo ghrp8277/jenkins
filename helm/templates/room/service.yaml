@@ -1,0 +1,153 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-service
+  namespace: prod
+spec:
+  selector:
+    app: room
+  ports:
+    - protocol: TCP
+      port: 3005
+      targetPort: 3005
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-mysql-master-service 
+  namespace: prod
+spec:
+  selector:
+    app: room
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-phpmyadmin-service
+  namespace: prod
+spec:
+  selector:
+    app: room
+  ports:
+    - protocol: TCP
+      port: 3080
+      targetPort: 80
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-redis-service
+  namespace: prod
+spec:
+  selector:
+    app: room
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-redis-gui-service
+  namespace: prod
+spec:
+  selector:
+    app: room
+  ports:
+    - protocol: TCP
+      port: 3081
+      targetPort: 8081
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-slave-redis-service
+  namespace: prod
+spec:
+  selector:
+    app: room
+  ports:
+    - protocol: TCP
+      port: 6380
+      targetPort: 6380
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-slave-redis-gui-service
+  namespace: prod
+spec:
+  selector:
+    app: room
+  ports:
+    - protocol: TCP
+      port: 3082
+      targetPort: 8082
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-mongo-service
+  namespace: prod
+spec:
+  selector:
+    app: room
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-mongo-gui-service
+  namespace: prod
+spec:
+  selector:
+    app: room
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-fluent-bit-service
+  namespace: prod
+spec:
+  selector:
+    app: room
+  ports:
+    - name: tcp
+      protocol: TCP
+      port: 24220
+      targetPort: 24224
+    - name: udp
+      protocol: UDP
+      port: 24220
+      targetPort: 24224
+  type: NodePort

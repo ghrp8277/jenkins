@@ -1,0 +1,87 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: room-phpmyadmin-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /phpmyadmin-room(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: room-phpmyadmin-service
+                port:
+                  number: 3080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: room-redis-gui-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /redis-room(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: room-redis-gui-service
+                port:
+                  number: 3081
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: room-slave-redis-gui-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /redis-slave-room(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: room-slave-redis-gui-service
+                port:
+                  number: 3082
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: room-mongo-express-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /mongo-express(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: room-mongo-gui-service
+                port:
+                  number: 3000
