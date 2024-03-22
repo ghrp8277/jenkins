@@ -53,7 +53,7 @@ spec:
         - name: phpmyadmin-container
           image: 192.168.0.212:5555/phpmyadmin/phpmyadmin
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           env:
             - name: PMA_HOST
               value: "room-mysql-master-service" # Use service name for DB host
