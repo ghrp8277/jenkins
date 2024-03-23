@@ -9,8 +9,8 @@ spec:
     app: room
   ports:
     - protocol: TCP
-      port: 3005
-      targetPort: 3005
+      port: 3006
+      targetPort: 3006
   type: NodePort
 
 ---
