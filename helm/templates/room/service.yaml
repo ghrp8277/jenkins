@@ -11,7 +11,7 @@ spec:
     - protocol: TCP
       port: 3006
       targetPort: 3006
-  type: NodePorts
+  type: NodePort
 
 ---
 apiVersion: v1
