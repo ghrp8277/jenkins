@@ -50,19 +50,19 @@ spec:
             - name: room-mysql-master-data
               mountPath: /var/lib/mysql
 
-        # - name: phpmyadmin-container
-        #   image: 192.168.0.212:5555/phpmyadmin/phpmyadmin
-        #   ports:
-        #     - containerPort: 80
-        #   env:
-        #     - name: PMA_HOST
-        #       value: "room-mysql-master-service" # Use service name for DB host
-        #     - name: PMA_PORT
-        #       value: "3306"
-        #     - name: PMA_USER
-        #       value: root
-        #     - name: PMA_PASSWORD
-        #       value: testtest
+        - name: phpmyadmin-container
+          image: 192.168.0.212:5555/phpmyadmin/phpmyadmin
+          ports:
+            - containerPort: 80
+          env:
+            - name: PMA_HOST
+              value: "room-mysql-master-service" # Use service name for DB host
+            - name: PMA_PORT
+              value: "3306"
+            - name: PMA_USER
+              value: root
+            - name: PMA_PASSWORD
+              value: testtest
 
         - name: redis-container
           image: 192.168.0.212:5555/redis:latest
