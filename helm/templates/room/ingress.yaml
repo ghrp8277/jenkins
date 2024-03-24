@@ -22,7 +22,7 @@ spec:
               service:
                 name: room-socket-service
                 port:
-                  number: 80
+                  number: 3006
 
 # ---
 # apiVersion: networking.k8s.io/v1
