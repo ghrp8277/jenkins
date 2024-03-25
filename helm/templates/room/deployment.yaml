@@ -19,7 +19,7 @@ spec:
           command: ["/bin/bash"]
           args: ["/usr/src/main/entrypoint.sh"]
           ports:
-            - containerPort: 3100
+            - containerPort: 3006
           volumeMounts:
             - name: room-logs
               mountPath: /usr/src/main/logs
