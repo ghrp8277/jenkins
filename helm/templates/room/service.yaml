@@ -25,7 +25,7 @@ spec:
   ports:
     - protocol: TCP
       port: 3100
-      targetPort: 3006
+      targetPort: 3100
   type: NodePort
 
 ---
