@@ -17,6 +17,21 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: orchestrator-socket-service
+  namespace: prod
+spec:
+  selector:
+    app: orchestrator
+  ports:
+    - protocol: TCP
+      port: 3100
+      targetPort: 3000
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
   name: orchestrator-redis-service
   namespace: prod
 spec:
