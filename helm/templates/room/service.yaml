@@ -17,21 +17,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: room-socket-service
-  namespace: prod
-spec:
-  selector:
-    app: room
-  ports:
-    - protocol: TCP
-      port: 3100
-      targetPort: 3006
-  type: NodePort
-
----
-apiVersion: v1
-kind: Service
-metadata:
   name: room-mysql-master-service 
   namespace: prod
 spec:
